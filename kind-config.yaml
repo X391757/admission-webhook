@@ -1,0 +1,49 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  # Control plane node (可以认为是一个 on-demand 节点)
+  - role: control-plane
+    labels:
+      node.kubernetes.io/capacity: on-demand
+    extraPortMappings:
+      - containerPort: 80  # Example port mapping for services
+        hostPort: 8080
+        protocol: TCP
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "node.kubernetes.io/capacity=on-demand"
+
+  # Worker node 1 (代表一个 spot 实例)
+  - role: worker
+    labels:
+      node.kubernetes.io/capacity: spot
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "node.kubernetes.io/capacity=spot"
+
+  # Worker node 2 (代表一个 on-demand 实例)
+  - role: worker
+    labels:
+      node.kubernetes.io/capacity: on-demand
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "node.kubernetes.io/capacity=on-demand"
+# Worker node 1 (代表一个 spot 实例)
+  - role: worker
+    labels:
+      node.kubernetes.io/capacity: spot
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "node.kubernetes.io/capacity=spot"

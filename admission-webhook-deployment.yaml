@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admission-webhook
+  labels:
+    app: admission-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admission-webhook
+  template:
+    metadata:
+      labels:
+        app: admission-webhook
+    spec:
+      containers:
+      - name: admission-webhook
+        image: sdkfeg/admission-webhook:latest
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - name: webhook-tls
+          mountPath: /etc/webhook/certs
+          readOnly: true
+        command: ["./webhook"]
+        args:
+        - "--tls-cert-file=/etc/webhook/certs/tls.crt"
+        - "--tls-private-key-file=/etc/webhook/certs/tls.key"
+      volumes:
+      - name: webhook-tls
+        secret:
+          secretName: webhook-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admission-webhook-svc
+  labels:
+    app: admission-webhook
+spec:
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    app: admission-webhook
+  type: ClusterIP
+
